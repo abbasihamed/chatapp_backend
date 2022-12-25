@@ -1,0 +1,8 @@
+/env
+/mychat/__pycache__
+/mychat/src/controller/__pycache__
+/mychat/src/core/__pycache__
+/mychat/src/crud/__pycache__
+/mychat/src/db/__pycache__
+/mychat/src/routers/__pycache__
+/mychat/src/schemas/__pycache__
