@@ -1,5 +1,3 @@
-import json
-from datetime import datetime
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 
 from mychat.src.db.database import mongo_client
@@ -32,7 +30,16 @@ async def get_old_message(sender: str, receiver: str):
         raise HTTPException(detail='No Exist', status_code=404)
     return rooms_crud.roomEntity(chat)
 
+# {"message.id": id}, {'message.$': 1}
 
-@router.get('/find{email}')
+
+@router.get('/find-delete={id}/{email}')
+async def find_delelte(id: str, email: str):
+    chat = mongo_client.telegram.rooms.find_one_and_update(
+        {"message.id": '63ab1cc6e3322155dd8941a9'}, {'$pull': {'message.$.viewers': email}})
+    return None
+
+
+@router.get('/find={email}')
 async def find(email: str):
     return rooms_crud.find_rooms(email)

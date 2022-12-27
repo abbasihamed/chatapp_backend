@@ -3,9 +3,9 @@ from mychat.src.db.database import mongo_client
 
 def roomEntity(item):
     return {
-        'id': str(item['_id']),
-        'room_name': item['room_name'],
-        'members': item['members'],
+        # 'id': str(item['_id']),
+        # 'room_name': item['room_name'],
+        # 'members': item['members'],
         'messages': item['message']
     }
 

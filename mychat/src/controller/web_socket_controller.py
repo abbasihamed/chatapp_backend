@@ -1,4 +1,5 @@
 import json
+from bson.objectid import ObjectId
 from datetime import datetime
 from collections import defaultdict
 from fastapi import WebSocket
@@ -28,9 +29,11 @@ class WebSocketManager:
                 'datetime': datetime.now(),
                 'message': [
                     {
+                        'id': str(ObjectId()),
                         'sender': data['sender'],
                         'receiver':data['receiver'],
                         'body':data['body'],
+                        'viewers':[data['sender'], data['receiver']],
                         'datetime':datetime.now(),
                     }
                 ]
@@ -48,9 +51,11 @@ class WebSocketManager:
                 room_name, {'datetime': datetime.now()})
             member = rooms_crud.find_room_update(room_name=room_name, value={
                 'message': {
+                    'id': str(ObjectId()),
                     'sender': data['sender'],
                     'receiver': data['receiver'],
                     'body': data['body'],
+                    'viewers': [data['sender'], data['receiver']],
                     'datetime': datetime.now(),
                 }
             }, mode='$addToSet')
