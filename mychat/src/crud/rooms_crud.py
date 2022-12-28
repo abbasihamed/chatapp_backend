@@ -3,11 +3,12 @@ from mychat.src.db.database import mongo_client
 
 def roomEntity(item):
     return {
-        # 'id': str(item['_id']),
-        # 'room_name': item['room_name'],
-        # 'members': item['members'],
+        'id': str(item['_id']),
+        'room_name': item['room_name'],
+        'members': item['members'],
         'messages': item['message']
     }
+
 
 def roomList(item):
     return {
@@ -28,6 +29,11 @@ def get_room(room_name: str):
 
 def find_rooms(email):
     return roomsEntity(mongo_client.telegram.rooms.find({'members': {'$in': [email]}}).sort('datetime', -1))
+
+
+def find_delete(message_id: str, email: str):
+    mongo_client.telegram.rooms.find_one_and_update(
+        {"message.id": message_id}, {'$pull': {'message.$.viewers': email}})
 
 
 def create_room(room_data: dict):

@@ -1,9 +1,10 @@
+import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 
-from mychat.src.db.database import mongo_client
 from mychat.src.controller.web_socket_controller import WebSocketManager
 
 from mychat.src.crud import rooms_crud
+from mychat.src.core.enums import ChatEnum
 
 router = APIRouter(tags=['chat'])
 
@@ -17,7 +18,12 @@ async def chat_websocket(email: str, websocket: WebSocket):
     try:
         while True:
             receive_message = await websocket.receive_text()
-            await socket_manager.send_message(receive_message)
+            r = json.loads(receive_message)
+            if r['request_mode'] == ChatEnum.message.name:
+                await socket_manager.send_message(receive_message)
+            if r['request_mode'] == ChatEnum.delete.name:
+                await socket_manager.delete_message(receive_message)
+
     except WebSocketDisconnect:
         print('sfddsd')
 
@@ -29,15 +35,6 @@ async def get_old_message(sender: str, receiver: str):
     if not chat:
         raise HTTPException(detail='No Exist', status_code=404)
     return rooms_crud.roomEntity(chat)
-
-# {"message.id": id}, {'message.$': 1}
-
-
-@router.get('/find-delete={id}/{email}')
-async def find_delelte(id: str, email: str):
-    chat = mongo_client.telegram.rooms.find_one_and_update(
-        {"message.id": '63ab1cc6e3322155dd8941a9'}, {'$pull': {'message.$.viewers': email}})
-    return None
 
 
 @router.get('/find={email}')

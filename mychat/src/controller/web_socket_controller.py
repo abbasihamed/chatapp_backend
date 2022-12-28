@@ -5,6 +5,20 @@ from collections import defaultdict
 from fastapi import WebSocket
 
 from mychat.src.crud import rooms_crud
+from mychat.src.core.enums import ChatEnum
+
+
+def response_generate(value):
+    return {
+        'message': {
+            'id': str(ObjectId()),
+            'sender': value['sender'],
+            'receiver': value['receiver'],
+            'body': value['body'],
+            'viewers': [value['sender'], value['receiver']],
+            'datetime': datetime.now(),
+        }
+    }
 
 
 class WebSocketManager:
@@ -40,7 +54,8 @@ class WebSocketManager:
             }
             rooms_crud.create_room(room_data=room_init_data)
             member_list = [data['sender'], data['receiver']]
-            data['datetime'] = datetime.now()
+            data=room_init_data['message'][0]
+            data['request_mode'] = ChatEnum.message.name
             for item in member_list:
                 if self.connections[item] == {}:
                     continue
@@ -49,18 +64,11 @@ class WebSocketManager:
         else:
             rooms_crud.find_room_update(
                 room_name, {'datetime': datetime.now()})
-            member = rooms_crud.find_room_update(room_name=room_name, value={
-                'message': {
-                    'id': str(ObjectId()),
-                    'sender': data['sender'],
-                    'receiver': data['receiver'],
-                    'body': data['body'],
-                    'viewers': [data['sender'], data['receiver']],
-                    'datetime': datetime.now(),
-                }
-            }, mode='$addToSet')
+            member = rooms_crud.find_room_update(
+                room_name=room_name, value=response_generate(data), mode='$addToSet')
             member_list = member['members']
-            data['datetime'] = datetime.now()
+            data = response_generate(data)['message']
+            data['request_mode'] = ChatEnum.message.name
             for member in member_list:
                 if self.connections[member] == {}:
                     continue
@@ -69,3 +77,8 @@ class WebSocketManager:
 
     async def send_rooms(self, email):
         await self.connections[email].send_text(json.dumps(rooms_crud.find_rooms(email), default=str))
+
+    async def delete_message(self, receive_message):
+        data = json.loads(receive_message)
+        rooms_crud.find_delete(message_id=data['body'], email=data['sender'])
+        await self.connections[data['sender']].send_text(receive_message)
